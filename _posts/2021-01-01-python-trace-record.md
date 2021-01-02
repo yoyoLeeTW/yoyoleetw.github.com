@@ -9,7 +9,7 @@ tags: python
 當需要個功能的時候，常會直覺地把 function 寫出來，比如說下面的程式
 但此情況下是沒有主控權的彈性的，也就是說對於每個使用的人，都是一樣的立場
 
-```=python
+```python
 def debug(msg):
   pass
 ```
@@ -19,8 +19,7 @@ def debug(msg):
 讓沒有想客製化的有同上共用的介面
 但也提供想客製化的有 class 的介面的選擇
 
-```=python
-
+```python
 class _Logger:
   def debug(self, msg):
     pass
