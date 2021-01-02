@@ -89,14 +89,14 @@ class TestSomething(unittest.TestCase):
 
 ## 提供方式
 
-### 使用 functools.contextmanager (asynccontextmanger)
+### contextlib.contextmanager (asynccontextmanger)
 
 因為其結構性與方便性，為最常使用的一種方式
 
 #### contextmanager 的使用概念
 
 ``` python
-@functools.contextmanger
+@contextlib.contextmanger
 def context():
   # 原預期在 __enter__ 會做的事
 
@@ -111,7 +111,7 @@ def context():
 原本提供 try-catch 介面，甚至有些需要 finally，如資源使用
 
 ``` python
-@functools.contextmanger
+@contextlib.contextmanger
 def context():
   try:
     resource = open_resource()
@@ -125,18 +125,18 @@ def context():
 原本提供 with 介面，以此情況更需要使用 `functool.contextmanger`，因為使用原生的 `__enter__`, `__exit__` 會顯得有些彆扭，且不直覺
 
 ``` python
-@functools.contextmanger
+@contextlib.contextmanger
 def open_connect_by_config(host_name):
   host, user = get_host_info_by_config(host_name)
   with asyncssh.connect(host, username=user) as conn:
     yield conn
 ```
 
-### 使用原生 magic method
+### 原生 magic method
 
 magic method: `__enter__`, `__exit__`
 
-以下以 資源存取介面即為當初 new 出來的物件“ 作為舉例，實際概念與使用 `functools.contextmanager` 相仿
+以下以 資源存取介面即為當初 new 出來的物件“ 作為舉例，實際概念與使用 `contextlib.contextmanager` 相仿
 以下面的狀況來說，Context new 出來的物件，即為執行 do_something 的物件
 
 ``` python
@@ -151,7 +151,7 @@ with Context() as c:
 
 ## 進階用法
 
-### 統一管理多個
+### 統一管理多個區間
 
 在只需要一個區間的情況下，with 很好用，但如果需要多個則會顯得沒有彈性，
 而 contextlib 中的 `ExitStack`，可以收集許多擁有 context 性質的東西，統一恢復資源，
