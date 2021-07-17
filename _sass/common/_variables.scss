@@ -87,14 +87,14 @@ $layout: (
   aside-width:            220px
 );
 
-//     sm       md       lg
-// | ------ | ------ | ------ |
-// 0       500      1024      -
-
+// https://getbootstrap.com/docs/5.0/layout/grid/
 $responsive: (
-  sm:                      0,
-  md:                      500px,
-  lg:                      1024px
+  xs:                      0,
+  sm:                      576px,
+  md:                      768px,
+  lg:                      992px,
+  xl:                      1200px,
+  xxl:                     1400px
 );
 
 $animation: (
