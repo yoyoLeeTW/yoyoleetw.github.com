@@ -25,7 +25,7 @@ author = 'yoyo'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = ["ablog", "sphinx_sitemap"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,4 +52,34 @@ html_theme = 'press'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_static', 'feed.xml', 'robots.txt']
+
+html_extra_path = ["feed.xml", "robots.txt"]
+
+html_css_files = ["css/style.css"]
+
+html_baseurl = 'https://yoyoleetw.github.io'
+
+sitemap_filename = "sitemap.xml"
+
+blog_authors = {
+    "yoyoLeeTW": ("Yo-Yo Li", "https://github.com/yoyoLeeTW"),
+}
+blog_default_author = "yoyoLeeTW"
+blog_languages = {
+    "en": ("English", None),
+    "zh": ("中文", None),
+}
+blog_locations = {
+    "TW": ("Taiwan", None),
+}
+blog_baseurl = "https://yoyoleetw.github.io"
+blog_title = "yoyo's Blog"
+blog_path = "blog"
+
+blog_feed_archives = True
+
+fontawesome_link_cdn = "https://pro.fontawesome.com/releases/v5.13.0/css/all.css"
+fontawesome_included = True
+
+# disqus_shortname = ""
