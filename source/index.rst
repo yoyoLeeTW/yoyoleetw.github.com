@@ -3,18 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to yoyo's blog's documentation!
-=======================================
+Recent Posts
+============
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
 
+   blog
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. postlist:: 5
+   :format: {date} - {title}
+   :list-style: none
+   :excerpts:
+   :expand: Read more ...
