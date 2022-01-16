@@ -8,6 +8,9 @@ verify_ssl = true
 [packages]
 sphinx = "*"
 ablog = "*"
+sphinx-material = "*"
+sphinx-sitemap = "*"
+sphinx-press-theme = "*"
 
 [requires]
 python_version = "3.8"
