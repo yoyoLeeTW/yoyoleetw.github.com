@@ -1,0 +1,26 @@
+/* In-page post lists */
+/* Ref: https://github.com/choldgraf/choldgraf.github.io/blob/main/_static/custom.css */
+ul.postlist {
+    padding-left: 0;
+}
+
+ul.postlist > li > p:first-child {
+    font-size: 1.3em;
+}
+
+ul.postlist li + li {
+    margin-top: 2em;
+}
+
+ul.postlist li > p > a {
+    font-style: normal;
+    font-size: 1.3em;
+}
+
+ul.postlist li > p > a:nth-child(2) {
+    font-size: 1em;
+}
+
+ul.postlist li > p > a:nth-child(2) > em {
+    font-style: normal;
+}

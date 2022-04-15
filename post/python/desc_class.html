@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html  lang="zh_TW">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+      <title>Python 中客製 attribute - descriptor class</title>
+    
+          <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+          <link rel="stylesheet" href="../../_static/theme.css " type="text/css" />
+          <link rel="stylesheet" href="../../_static/css/style.css" type="text/css" />
+      
+      <!-- sphinx script_files -->
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+
+      
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="../../_static/theme-vendors.js"></script> -->
+      <script src="../../_static/theme.js" defer></script>
+      <link rel="canonical" href="https://yoyoleetw.github.io/post/python/desc_class.html" />
+    
+  <link rel="index" title="索引" href="../../genindex.html" />
+  <link rel="search" title="搜尋" href="../../search.html" />   
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="../../blog/atom.xml"
+  title="yoyo's Blog"
+/>
+ 
+<link href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet" />
+
+<style type="text/css">
+  ul.ablog-archive {
+    list-style: none;
+    overflow: auto;
+    margin-left: 0px;
+  }
+  ul.ablog-archive li {
+    float: left;
+    margin-right: 5px;
+    font-size: 80%;
+  }
+  ul.postlist a {
+    font-style: italic;
+  }
+  ul.postlist-style-disc {
+    list-style-type: disc;
+  }
+  ul.postlist-style-none {
+    list-style-type: none;
+  }
+  ul.postlist-style-circle {
+    list-style-type: circle;
+  }
+</style>
+
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses"><navbar @toggle-sidebar="toggleSidebar">
+  <router-link to="../../index.html" class="home-link">
+    
+      <span class="site-name">yoyo&#39;s blog</span>
+    
+  </router-link>
+
+  <div class="links">
+    <navlinks class="can-hide">
+
+
+
+    </navlinks>
+  </div>
+</navbar>
+
+      
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+        <sidebar @toggle-sidebar="toggleSidebar">
+          
+          <navlinks>
+            
+
+
+
+            
+          </navlinks><div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">快速搜尋</span>
+    <div class="searchformwrapper">
+      <form class="search" action="../../search.html" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="搜尋" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div><div class="sidebar-links" role="navigation" aria-label="main navigation">
+  
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="../../index.html#recent-posts">recent posts</a></span>
+      </p>
+      <ul class="">
+        
+          <li class="toctree-l1 ">
+            
+              <a href="../../blog.html" class="reference internal ">Blog</a>
+            
+
+            
+          </li>
+
+        
+      </ul>
+    </div>
+  
+</div>
+        </sidebar>
+
+      <page>
+          <div class="body-header" role="navigation" aria-label="navigation">
+  
+  <ul class="breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+    
+    <li>Python 中客製 attribute - descriptor class</li>
+  </ul>
+  
+
+  <ul class="page-nav">
+</ul>
+  
+</div>
+<hr>
+          <div class="content" role="main" v-pre>
+             <section id="python-attribute-descriptor-class">
+<h1>Python 中客製 attribute - descriptor class<a class="headerlink" href="#python-attribute-descriptor-class" title="本標題的永久連結">¶</a></h1>
+<section id="id1">
+<h2>前言<a class="headerlink" href="#id1" title="本標題的永久連結">¶</a></h2>
+<p>此篇要介紹的內容實務上不像 with 或是 decorator 之類的那麼常使用，除非是製作 framework 的時候，
+但是實際上他卻無所不在，因此建議可以了解，有助於了解平常使用工具的運行方式，有助於之後釐清問題。</p>
+</section>
+<section id="id2">
+<h2>使用方法介紹<a class="headerlink" href="#id2" title="本標題的永久連結">¶</a></h2>
+<p>最常見，也是最入門使用到此方式的為 <code class="docutils literal notranslate"><span class="pre">&#64;property</span></code>，舉例來說如下，就可以做到一個變數 <code class="docutils literal notranslate"><span class="pre">name</span></code> 只能讀
+，不能寫，如果對於 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> 不懂的話，可以先看看 <a class="reference internal" href="decorator.html#decorator"><span class="std std-ref">Python 中用 &#64; 讓函數賦予特型</span></a>
+了解一下再回來。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+<span class="n">wendy</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;wendy&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">wendy</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># wendy</span>
+</pre></div>
+</div>
+<p>因此如果想要執行如 <code class="docutils literal notranslate"><span class="pre">wendy.name</span> <span class="pre">=</span> <span class="pre">'andy'</span></code> 的話就會噴以下的 Error：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Traceback (most recent call last):
+File &quot;a.py&quot;, line 11, in &lt;module&gt;
+  wendy.name = &#39;andy&#39;
+AttributeError: can&#39;t set attribute
+</pre></div>
+</div>
+<p>能做到這樣的效果，就是因為 <code class="docutils literal notranslate"><span class="pre">property</span></code> 把 <code class="docutils literal notranslate"><span class="pre">name</span></code> 這個 method 作為一個 getter method，並且
+沒有額外提供 setter 的能力，Pythone 在底層時，因為找不到 set 的能力就報 Error 了。</p>
+<p>看過上述 <code class="docutils literal notranslate"><span class="pre">property</span></code> 的使用方式後，相信聰明的朋友一定有注意到只要 method 的實作方式換，可以做到
+更多客製化的 getter 行為，舉例來說以下例子就做到實際取得的直，與儲存的值中間需要個轉換的情況，也可以
+經由客製 getter 的方式做到。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Wallet</span><span class="p">:</span>
+  <span class="nd">@porperty</span>
+  <span class="k">def</span> <span class="nf">total_money</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_of_5_coin</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_of_1_coin</span>
+</pre></div>
+</div>
+<p>但對於一個錢包來說，不見得裡面的硬幣數量永遠都是固定的，還是有可能增減，但需要一些檢查，如數量總不會是負的，
+因此可以如下方式提供 setter，並在其中檢察職符合預期的情況才給設定：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Wallet</span><span class="p">:</span>
+  <span class="nd">@porperty</span>
+  <span class="k">def</span> <span class="nf">count_of_5_coin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_of_5_coin</span>
+
+  <span class="nd">@memey_in_US</span><span class="o">.</span><span class="n">setter</span>
+  <span class="k">def</span> <span class="nf">_count_of_5_coin_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Count(</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1">) cannot be negative&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_count_of_5_coin</span> <span class="o">=</span> <span class="n">count</span>
+</pre></div>
+</div>
+<p>這邊看到 <code class="docutils literal notranslate"><span class="pre">setter</span></code> 實際上是針對 <code class="docutils literal notranslate"><span class="pre">count_of_5_coin</span></code> 再多賦予存值的能力，且要存的話就使用後面的函數
+，且是使用 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> 的方式註冊到原 <code class="docutils literal notranslate"><span class="pre">count_of_5_coin</span></code> 的 property 中。</p>
+</section>
+<section id="python">
+<h2>Python 的解讀方式和實際的運作方式<a class="headerlink" href="#python" title="本標題的永久連結">¶</a></h2>
+<section id="object-attribute">
+<h3>object 的 attribute<a class="headerlink" href="#object-attribute" title="本標題的永久連結">¶</a></h3>
+<p>這邊使用取值的時候做舉例 (也就是用 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>)，同樣還有設值的時候 (也就是用 <code class="docutils literal notranslate"><span class="pre">__set__</span></code>)，
+還有刪除值的時候 (也就是 <code class="docutils literal notranslate"><span class="pre">__delete__</span></code>)，他們的運作方式都一樣，只有呼叫時的參數給的不一樣。</p>
+<p>以下以固定皆回傳 <code class="docutils literal notranslate"><span class="pre">10</span></code> 這種最簡單的 descriptor class 做舉例：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Ten</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">10</span>
+
+<span class="k">class</span> <span class="nc">A</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="mi">5</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">Ten</span><span class="p">()</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># 5</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>  <span class="c1"># 10</span>
+</pre></div>
+</div>
+<p>當執行 <code class="docutils literal notranslate"><span class="pre">a.x</span></code> 的時候，會先看看 class 中定義的 <code class="docutils literal notranslate"><span class="pre">x</span></code> 實際上的性質，以此狀況來說，看到了純數字
+(非 descriptor 的 object)，所以會直接取出來使用，也就會拿到 5。</p>
+<p>當執行 <code class="docutils literal notranslate"><span class="pre">a.y</span></code> 的時候，會先看看 class 中定義的 <code class="docutils literal notranslate"><span class="pre">y</span></code> 實際上的性質，以此狀況來說，看到了
+descriptor object (有 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 此 magic method 的 object)，就會用以下的方式解讀：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>所以實際上會由 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">A</span></code> 的定義中取出經 <code class="docutils literal notranslate"><span class="pre">Ten()</span></code> 當時建構出來的 object，也就是
+<code class="docutils literal notranslate"><span class="pre">A.__dict__['y']</span></code>，之後執行 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 這個 method之後，代入 object 本身 <code class="docutils literal notranslate"><span class="pre">a</span></code> 和其
+class <code class="docutils literal notranslate"><span class="pre">A</span></code> 做為參數。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><code class="docutils literal notranslate"><span class="pre">A.__dict__['y']</span></code> 拿到的是 <code class="docutils literal notranslate"><span class="pre">Ten</span></code> 建構出來的 object，所以實際上 call <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 時，
+拿到的 self 會是此 object，因為他是放在 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">A</span></code> 裡面，所以這個是所有 <code class="docutils literal notranslate"><span class="pre">A</span></code> 建構出來的
+object 共用的，如果要依據不同的 A object 存放的內容，請存在 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 這個參數裡面。</p>
+</div>
+</section>
+<section id="class-attribute">
+<h3>class 的 attribute<a class="headerlink" href="#class-attribute" title="本標題的永久連結">¶</a></h3>
+<p>一般我們也會認為 class 的 attribute 也就是當時 class 定義的時候放的值，但實際上不見得，和 object
+的情況要考慮 descriptor object 一樣，class 的情況它也適用，方式也是一樣的，都是會執行 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>
+來取得，唯一的差別在於 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 這個參數拿到的會是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，因此為了讓 class 的行為會符合一般我們對於
+class 的認知，通常會檢查如果 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 就會回傳 <code class="docutils literal notranslate"><span class="pre">self</span></code> 來符合，如下。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Ten</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtyp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span>
+    <span class="k">return</span> <span class="mi">10</span>
+
+<span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="mi">5</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">Ten</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>  <span class="c1"># Ten</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id3">
+<h2>取值、設值、刪除值的例子<a class="headerlink" href="#id3" title="本標題的永久連結">¶</a></h2>
+<p>取值、設值、刪除值實際上的運作方式都同上面的說明，這邊為加強印象以及理解 descriptor class 的 object
+與 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 拿到的 object 是不同的對象。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="k">class</span> <span class="nc">LoggedAccess</span>
+  <span class="k">def</span> <span class="nf">__set_name__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_public_name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_private_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span>
+
+  <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="p">):</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_private_name</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Accessing </span><span class="si">%r</span><span class="s1"> giving </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_public</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+  <span class="k">def</span> <span class="fm">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">%r</span><span class="s1"> to </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_public_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_private_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="fm">__delete__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Deleting </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_public_name</span><span class="p">)</span>
+    <span class="nb">delattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_private_name</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="n">name</span> <span class="o">=</span> <span class="n">LoggedAccess</span><span class="p">()</span>
+  <span class="n">age</span> <span class="o">=</span> <span class="n">LoggedAccess</span><span class="p">()</span>
+
+<span class="n">wendy</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+<span class="n">wendy</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;wendy&#39;</span>
+<span class="c1"># Updating name to wendy</span>
+<span class="n">wendy</span><span class="o">.</span><span class="n">name</span>
+<span class="c1"># Accessing name giving wendy</span>
+<span class="k">del</span> <span class="n">wendy</span><span class="o">.</span><span class="n">name</span>
+<span class="c1"># Deleting name</span>
+</pre></div>
+</div>
+<p>上面的例子中，除了 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>、<code class="docutils literal notranslate"><span class="pre">__set__</span></code>、<code class="docutils literal notranslate"><span class="pre">__delete__</span></code> 是上面介紹過的，還有
+<code class="docutils literal notranslate"><span class="pre">__set_name__</span></code> 有特別的用法，他是在 descriptor class 被建構出來，且賦予到一個變數時，
+會被呼叫的一個 hook，以此例子來說，也就是在 <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">LoggedAccess()</span></code> 的時候，且 owner
+會拿到 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 這個 class，name 會拿到 <code class="docutils literal notranslate"><span class="pre">name</span></code> 這個 string，也就可以得到之後使用的名字。</p>
+</section>
+<section id="descriptor-class">
+<h2>常見使用 descriptor class 的工具<a class="headerlink" href="#descriptor-class" title="本標題的永久連結">¶</a></h2>
+<section id="property">
+<h3>property<a class="headerlink" href="#property" title="本標題的永久連結">¶</a></h3>
+<p>也是一般最容易會接觸到的方式，方法與上面介紹的差不多，<code class="docutils literal notranslate"><span class="pre">funtools.cached_property</span></code> 也和此有一樣的
+使用方式，唯一的差別在於他不會把前一次取得的值先存起來，就不需要一直重複計算。</p>
+<p>而如果對於底層的實作方式有興趣，或是想知道為什麼可以有 <code class="docutils literal notranslate"><span class="pre">.setter</span></code> 動態加入 setter 的方式，之類的問題
+，建議直接看 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html#properties">官方的說明</a> 。</p>
+</section>
+<section id="method">
+<h3>method<a class="headerlink" href="#method" title="本標題的永久連結">¶</a></h3>
+<p>其實在 Python 之中，function 和 method 有些許的不一樣，method 和 function 的差別在於 method
+有多綁定所屬的 class，因此 class 中的 method 的第一個參數才會統一是 self，也就是拿到 object 自身。</p>
+<p>為什麼有這樣的效果呢？原因在於 <code class="docutils literal notranslate"><span class="pre">def</span></code> 定義出來的 function，實際上有實作 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>，只是我們都
+不知道而已，也因為此 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 的效果，所以經由 <code class="docutils literal notranslate"><span class="pre">.</span></code> 取得的 method 實際上是一個 callable 的
+attribute，而這時，實際上已經經 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 綁定了 object 進去，變成了 method，所以之後執行的時候
+，才會在第一個參數拿到 self。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MethodType</span><span class="p">:</span>
+
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="vm">__func__</span> <span class="o">=</span> <span class="n">func</span>
+    <span class="bp">self</span><span class="o">.</span><span class="vm">__self__</span> <span class="o">=</span> <span class="n">obj</span>
+
+  <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__func__</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__self__</span>
+    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Function</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span>
+    <span class="k">return</span> <span class="n">MethodType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>取自 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html#functions-and-methods">官方教學</a> ，
+這邊的 <code class="docutils literal notranslate"><span class="pre">Function</span></code> 是模仿 <code class="docutils literal notranslate"><span class="pre">def</span></code> 的行為寫出來的，實際上的行為定義在 Python 的原始碼之中，
+但我們可以經由上面的程式碼理解實際的運作方式。</p>
+<p>接下來我們舉個簡單的例子一起看一下實際的運作方式：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Dog</span><span class="p">:</span>
+  <span class="k">def</span> <span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">food</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">dog</span> <span class="o">=</span> <span class="n">Dog</span><span class="p">()</span>
+<span class="n">dog</span><span class="o">.</span><span class="n">eat</span><span class="p">(</span><span class="s1">&#39;meat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>同上說明，因為 <code class="docutils literal notranslate"><span class="pre">eat</span></code> 這個 function (且他有實作 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>)，被放到了 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Dog</span></code> 裡面，
+所以經 <code class="docutils literal notranslate"><span class="pre">dog.eat</span></code> 拿到的會是 <code class="docutils literal notranslate"><span class="pre">MethodType</span></code> 的 object (<code class="docutils literal notranslate"><span class="pre">MethodType</span></code> 的建構子可以知道綁定
+了當時經 <code class="docutils literal notranslate"><span class="pre">.</span></code> 操作的 object，也就是 <code class="docutils literal notranslate"><span class="pre">dog</span></code>)，且因為 <code class="docutils literal notranslate"><span class="pre">MethodType</span></code> 有 <code class="docutils literal notranslate"><span class="pre">__call__</span></code> 所以他是
+callable 的，也就可以經由 <code class="docutils literal notranslate"><span class="pre">()</span></code> 的方式帶入要執行的參數，並執行 <code class="docutils literal notranslate"><span class="pre">__call__</span></code>，這時實際代進 function
+的是 <code class="docutils literal notranslate"><span class="pre">func(obj,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code>，因此 method 拿到的第一個參數才會是 self，也就是 object 本身。</p>
+<p>類似行為的還有 <code class="docutils literal notranslate"><span class="pre">classmethod</span></code>、<code class="docutils literal notranslate"><span class="pre">staticmethod</span></code>、<code class="docutils literal notranslate"><span class="pre">abstractmethod</span></code>，他們只是差在經由 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>
+的方式把 function 中的 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 換成別的。</p>
+<p>這邊簡單用 <code class="docutils literal notranslate"><span class="pre">classmethod</span></code> 來舉例
+(擷取自 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html#class-methods">官方範例</a>)。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ClassMethod</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+
+  <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">),</span> <span class="s1">&#39;__get__&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">MethodType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>這邊可以注意到差別在於建構出 <code class="docutils literal notranslate"><span class="pre">MethodType</span></code> 時的參數不同，<code class="docutils literal notranslate"><span class="pre">Function</span></code> 用的是
+<code class="docutils literal notranslate"><span class="pre">MethodType(self,</span> <span class="pre">obj)</span></code>，而 <code class="docutils literal notranslate"><span class="pre">ClassMethod</span></code> 用的是 <code class="docutils literal notranslate"><span class="pre">MethodType(self.f,</span> <span class="pre">cls)</span></code>，
+第一個參數同樣是 function 本身，但第二個參數就由 object 本身改成了 object 的 class 了。</p>
+</section>
+<section id="id7">
+<h3>提供的介面有專門為 method 設計的情況<a class="headerlink" href="#id7" title="本標題的永久連結">¶</a></h3>
+<p>其實一般來說只要是放到 class 中使用的，基本上都會使用 descriptor class，以下舉幾個例子：</p>
+<section id="functools-partialmethod">
+<h4>functools.partialmethod<a class="headerlink" href="#functools-partialmethod" title="本標題的永久連結">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Cell</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_alive</span> <span class="o">=</span> <span class="kc">False</span>
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">alive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alive</span>
+  <span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_alive</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+  <span class="n">set_alive</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">set_state</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+  <span class="n">set_dead</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">set_state</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">()</span>
+<span class="n">c</span><span class="o">.</span><span class="n">alive</span> <span class="c1"># False</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_alive</span><span class="p">()</span>
+<span class="n">c</span><span class="o">.</span><span class="n">alive</span> <span class="c1"># True</span>
+</pre></div>
+</div>
+<p>以上例子取自
+<a class="reference external" href="https://docs.python.org/zh-tw/3.7/library/functools.html#functools.partialmethod">官方</a>。</p>
+<p>一般的情況會使用 <a class="reference external" href="https://docs.python.org/zh-tw/3.7/library/functools.html#functools.partial">functools.partial</a>
+，但當使用的 function 放在 class 裡面供 class 用的時候，請要用 method 的版本，為什麼會有這樣的差別
+就在於 descriptor class 的部分。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>類似狀況的還有
+<a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.singledispatchmethod">functools.singledispatchmethod</a>。</p>
+</div>
+</section>
+</section>
+</section>
+<section id="id9">
+<h2>參考<a class="headerlink" href="#id9" title="本標題的永久連結">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://openhome.cc/Gossip/Python/Descriptor.html">此篇</a> 針對 <code class="docutils literal notranslate"><span class="pre">__get__</span></code>
+有簡單的入門，對於原理介紹舉例的不錯。</p></li>
+<li><p>整篇 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html">官方文件</a> 取其比較常用的部分，
+如想了解更多可參考。</p></li>
+</ul>
+</section>
+</section>
+
+<div class="section">
+    
+
+<div class="section">
+  <span style="float: left">
+     
+    <a href="decorator.html">
+      <i class="fa fa-arrow-circle-left"></i> Python 中用 @ 讓函數賦予新特性
+    </a>
+    
+  </span>
+  <span>&nbsp;</span>
+  <span style="float: right">
+    
+  </span>
+</div>
+  
+</div>
+
+          </div>
+          <div class="page-nav">
+            <div class="inner"><ul class="page-nav">
+</ul><div class="footer" role="contentinfo">
+      &#169; 版權所有 2022, yoyo。
+    <br>
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.2 with <a href="https://github.com/schettino72/sphinx_press_theme">Press Theme</a> 0.8.0.
+</div>
+            </div>
+          </div>
+      </page>
+    </div></div>
+    
+    
+  </body>
+</html>

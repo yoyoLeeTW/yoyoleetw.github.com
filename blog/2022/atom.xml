@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh_TW">
+  <id>https://yoyoleetw.github.io</id>
+  <title>yoyo's Blog - Posted in 2022</title>
+  <updated>2022-04-15T11:18:58.869852+00:00</updated>
+  <link href="https://yoyoleetw.github.io"/>
+  <link href="https://yoyoleetw.github.io/blog/2022/atom.xml" rel="self"/>
+  <generator uri="https://ablog.readthedocs.org/" version="0.10.23">ABlog</generator>
+  <entry>
+    <id>https://yoyoleetw.github.io/zh_TW/post/python/desc_class.html</id>
+    <title>Python 中客製 attribute - descriptor class</title>
+    <updated>2022-03-20T00:00:00+00:00</updated>
+    <author>
+      <name>Yo-Yo Li</name>
+    </author>
+    <content type="html">&lt;div class="ablog-post-excerpt docutils container"&gt;
+&lt;p&gt;descriptor class&lt;/p&gt;
+&lt;/div&gt;
+</content>
+    <link href="https://yoyoleetw.github.io/zh_TW/post/python/desc_class.html" rel="alternate"/>
+    <summary>descriptor class</summary>
+    <category term="Python" label="Python"/>
+    <category term="descriptor" label="descriptor"/>
+    <category term="attribute" label="attribute"/>
+    <published>2022-03-20T00:00:00+00:00</published>
+  </entry>
+</feed>

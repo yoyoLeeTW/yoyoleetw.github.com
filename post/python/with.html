@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html  lang="zh_TW">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+      <title>Python 使用 with 讓區間賦予特性</title>
+    
+          <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+          <link rel="stylesheet" href="../../_static/theme.css " type="text/css" />
+          <link rel="stylesheet" href="../../_static/css/style.css" type="text/css" />
+      
+      <!-- sphinx script_files -->
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+
+      
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="../../_static/theme-vendors.js"></script> -->
+      <script src="../../_static/theme.js" defer></script>
+      <link rel="canonical" href="https://yoyoleetw.github.io/post/python/with.html" />
+    
+  <link rel="index" title="索引" href="../../genindex.html" />
+  <link rel="search" title="搜尋" href="../../search.html" />   
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="../../blog/atom.xml"
+  title="yoyo's Blog"
+/>
+ 
+<link href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet" />
+
+<style type="text/css">
+  ul.ablog-archive {
+    list-style: none;
+    overflow: auto;
+    margin-left: 0px;
+  }
+  ul.ablog-archive li {
+    float: left;
+    margin-right: 5px;
+    font-size: 80%;
+  }
+  ul.postlist a {
+    font-style: italic;
+  }
+  ul.postlist-style-disc {
+    list-style-type: disc;
+  }
+  ul.postlist-style-none {
+    list-style-type: none;
+  }
+  ul.postlist-style-circle {
+    list-style-type: circle;
+  }
+</style>
+
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses"><navbar @toggle-sidebar="toggleSidebar">
+  <router-link to="../../index.html" class="home-link">
+    
+      <span class="site-name">yoyo&#39;s blog</span>
+    
+  </router-link>
+
+  <div class="links">
+    <navlinks class="can-hide">
+
+
+
+    </navlinks>
+  </div>
+</navbar>
+
+      
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+        <sidebar @toggle-sidebar="toggleSidebar">
+          
+          <navlinks>
+            
+
+
+
+            
+          </navlinks><div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">快速搜尋</span>
+    <div class="searchformwrapper">
+      <form class="search" action="../../search.html" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="搜尋" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div><div class="sidebar-links" role="navigation" aria-label="main navigation">
+  
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="../../index.html#recent-posts">recent posts</a></span>
+      </p>
+      <ul class="">
+        
+          <li class="toctree-l1 ">
+            
+              <a href="../../blog.html" class="reference internal ">Blog</a>
+            
+
+            
+          </li>
+
+        
+      </ul>
+    </div>
+  
+</div>
+        </sidebar>
+
+      <page>
+          <div class="body-header" role="navigation" aria-label="navigation">
+  
+  <ul class="breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+    
+    <li>Python 使用 with 讓區間賦予特性</li>
+  </ul>
+  
+
+  <ul class="page-nav">
+</ul>
+  
+</div>
+<hr>
+          <div class="content" role="main" v-pre>
+             <section id="python-with">
+<h1>Python 使用 with 讓區間賦予特性<a class="headerlink" href="#python-with" title="本標題的永久連結">¶</a></h1>
+<section id="id1">
+<h2>摘要<a class="headerlink" href="#id1" title="本標題的永久連結">¶</a></h2>
+<p>我們知道取得資源後，不管執行的成功與否，都需要對資源做釋放，否則會有 leak 發生，
+在 Python 中為達到此目的，常見的且推薦的做法是使用 with，
+但 with 在 python 實際上要做的是賦予 with 區間特別的功能 (如: open 就是只有區間中能讀寫檔案)。</p>
+<p>內容綱要</p>
+<ul class="simple">
+<li><p><strong>運作方式與原理</strong>: 理解怎麼使用 <code class="docutils literal notranslate"><span class="pre">with</span></code>，以及其運作原理
+- 使用以例子帶特性的方式介紹特性，因此如想快速理解的可以參考目錄跳過例子的部分</p></li>
+<li><p><strong>如何提供 with 可以使用的 API</strong>: 理解如何實作出 <code class="docutils literal notranslate"><span class="pre">with</span></code> 的 API 供其他人使用</p></li>
+<li><p><strong>使用情境</strong>: 理解常見的使用情境，並舉出一些情境下的例子</p></li>
+</ul>
+</section>
+<section id="quickstart">
+<span id="id2"></span><h2>快速入門<a class="headerlink" href="#quickstart" title="本標題的永久連結">¶</a></h2>
+<p>情境：假設我們有一個檔案 <code class="docutils literal notranslate"><span class="pre">input.txt</span></code>，需要將檔案的內容讀出來，並顯示在螢幕上</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="linenos">2</span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">3</span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>未使用 with：此時都會使用 try-finally 的方式來保證有做到資源回收</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="linenos">2</span><span class="k">try</span><span class="p">:</span>
+<span class="linenos">3</span>    <span class="c1"># 可能是 f 的相關操作可能發生錯誤 (exception)，甚至是其他毫不相關的操作發生錯誤</span>
+<span class="linenos">4</span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">5</span><span class="k">finally</span><span class="p">:</span>
+<span class="linenos">6</span>    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>使用 with：可以簡單做到相容的效果，且更具可讀性</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;input.txt, &#39;</span><span class="sa">r</span><span class="s1">&#39;) as f:</span>
+<span class="linenos">2</span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="with">
+<h2>with 關鍵字背後的運作方式與原理<a class="headerlink" href="#with" title="本標題的永久連結">¶</a></h2>
+<p>這邊將會將 with 的實際運作流程，改以 try-except-finally 的方式來呈現，已了解 with 實際的運作方式</p>
+<p>p.s. 往後如果遇到一個情境不懂的用法是，可以自己試著換換看，以熟悉運作流程</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>如果還未了解 try-except-finally 的用法建議先理解後再回來繼續</p>
+</div>
+<section id="enter-exit">
+<h3>進入區間時執行 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、離開區間時執行 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code><a class="headerlink" href="#enter-exit" title="本標題的永久連結">¶</a></h3>
+<p>此段以常見的開檔讀取作為例子</p>
+<section id="id3">
+<h4>使用 with 時<a class="headerlink" href="#id3" title="本標題的永久連結">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="linenos">2</span>    <span class="c1"># Block start</span>
+<span class="linenos">3</span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">4</span>    <span class="c1"># Block end</span>
+</pre></div>
+</div>
+</section>
+<section id="try-except-finally">
+<h4>改使用 try-except-finally 時<a class="headerlink" href="#try-except-finally" title="本標題的永久連結">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1"># with open(&#39;input.txt&#39;, &#39;r&#39;) as f:</span>
+<span class="linenos"> 4</span><span class="n">obj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;input.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="linenos"> 5</span><span class="n">f</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="n">exc</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># a flag to determine if process trap into the except block</span>
+<span class="linenos"> 8</span><span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 9</span>    <span class="c1"># Block start</span>
+<span class="linenos">10</span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="linenos">11</span>    <span class="c1"># Block end</span>
+<span class="linenos">12</span><span class="k">except</span><span class="p">:</span>
+<span class="linenos">13</span>    <span class="c1"># go to here if there is an exception happened inside the block</span>
+<span class="linenos">14</span>    <span class="c1"># set flag as False to avoid double-free</span>
+<span class="linenos">15</span>    <span class="n">exc</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">16</span>    <span class="c1"># collect exception information</span>
+<span class="linenos">17</span>    <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exit_info</span><span class="p">()</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+<span class="linenos">20</span>        <span class="k">raise</span>
+<span class="linenos">21</span><span class="k">finally</span><span class="p">:</span>
+<span class="linenos">22</span>    <span class="k">if</span> <span class="n">exc</span><span class="p">:</span>
+<span class="linenos">23</span>        <span class="c1"># in this way there is no exception</span>
+<span class="linenos">24</span>        <span class="n">exc_type</span> <span class="o">=</span> <span class="n">exc_val</span> <span class="o">=</span> <span class="n">exc_tb</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos">25</span>        <span class="c1"># f.close() is implemented in __exit__</span>
+<span class="linenos">26</span>        <span class="n">obj</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h4><code class="docutils literal notranslate"><span class="pre">with</span></code> 的特性與說明<a class="headerlink" href="#id4" title="本標題的永久連結">¶</a></h4>
+<p>藉由觀察與理解上面的例子，以及後續會陸續介少的例子，我們可以歸納以下幾點：</p>
+<ul class="simple">
+<li><p>with 後面接的物件，需要 <strong>有實作 ``__enter__`` 和 ``__exit__``</strong> 兩個函數</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__enter__</span></code> 的 return 會 assign 給 <code class="docutils literal notranslate"><span class="pre">with</span></code> 敘述中的 <code class="docutils literal notranslate"><span class="pre">as</span></code>，作為操作資源的媒介
+- 如果沒有接 <code class="docutils literal notranslate"><span class="pre">as</span></code> 的解法，也就視為不取得 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> 回傳的內容
+- 需要的如 assertLogs
+- 不需要的如 contextlib.suppress、contextlib.redirect_stdout</p></li>
+<li><p>不管有沒有 exception 發生 <strong>``__exit__`` 都會被執行</strong>
+- 如果有 exception 發生，會略過 (不執行) 區間中 exception 發生點後的內容，並執行 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code>
+- 如果沒有 exception 發生，會在離開區間的時候執行 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code></p></li>
+<li><p>當有錯誤發生時，會收集當下的錯誤的原因與環境，並做為參數帶入 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code>，反之皆為 <code class="docutils literal notranslate"><span class="pre">None</span></code>
+- <code class="docutils literal notranslate"><span class="pre">exc_type</span></code> 為發生錯誤的型態
+- <code class="docutils literal notranslate"><span class="pre">exc_val</span></code> 為發生錯誤時，raise 拋出來的 object
+- <code class="docutils literal notranslate"><span class="pre">exc_tb</span></code> 為發生錯誤當下 stack 的資訊，也就是平常發生錯誤時看到的 call trace 的前生
+- 如果也想獲取上面資訊，也可以使用 <code class="docutils literal notranslate"><span class="pre">sys.exit_info()</span></code> 的方式獲得</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__exit__</span></code> 的回傳職為 True 的時候，表示 with 區間中發生的 exception 將會被 catch，不繼續向上拋出
+- <code class="docutils literal notranslate"><span class="pre">contextlib.suppress</span></code> 的例子</p></li>
+</ul>
+</section>
+</section>
+<section id="aenter-aexit">
+<h3><code class="docutils literal notranslate"><span class="pre">__aenter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code><a class="headerlink" href="#aenter-aexit" title="本標題的永久連結">¶</a></h3>
+<p>分別為 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code> 的 async 版本</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>如不知道什麼是 async function，建議先了解後再回來繼續</p>
+</div>
+<section id="aenter">
+<span id="id5"></span><h4><code class="docutils literal notranslate"><span class="pre">__aenter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code> 的例子<a class="headerlink" href="#aenter" title="本標題的永久連結">¶</a></h4>
+<p>此例子使用 <a class="reference external" href="https://asyncssh.readthedocs.io/en/latest/">asyncssh</a> 的功能作為範例</p>
+<p>此例子中，因為 <cite>connect</cite> 為一個需要維護的資源，需要正常的關閉連線，否則會讓 server 誤以為 client 還在而發生 leak</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>實際上網路相關的實作都會考慮到 client 不正常斷線的例外處理，因此都會有機制在時一段時間後回收 leak 的資源，但能做好的時候能第一時間的預防</p>
+</div>
+<p>因為 <cite>coonect</cite> 此行為是有需多的時間在等待連線的完成，適合使用 async 的方式實作，以減少浪費等待時間，而 asyncssh 正是使用此方式</p>
+<p>但一般的 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> 並非 async function，因此無法在 function 中使用 await，因此改使用 async 版的 <code class="docutils literal notranslate"><span class="pre">__aenter__</span></code> 實作</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">asyncio</span><span class="o">,</span> <span class="nn">asyncssh</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="k">async</span> <span class="k">def</span> <span class="nf">run_client</span><span class="p">():</span>
+<span class="linenos"> 4</span>    <span class="k">async</span> <span class="k">with</span> <span class="n">asyncssh</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="linenos"> 5</span>        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">conn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;ls abc&#39;</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos"> 6</span>        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 9</span>    <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">run_client</span><span class="p">())</span>
+<span class="linenos">10</span><span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">asyncssh</span><span class="o">.</span><span class="n">Error</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="linenos">11</span>    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;SSH connection failed: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">run_client</span></code> 的 function 中，使用 ssh 連練到 localhost，並在連線成功後執行 <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">abc</span></code>，並印出結果</p>
+<p>在離開 <cite>async with</cite> 的區間後關閉 ssh 的連線</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>其餘只是為了能在非 async function 下執行 async function 常見的方式</p>
+</div>
+</section>
+<section id="async-with">
+<h4><code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code> 的特性與說明<a class="headerlink" href="#async-with" title="本標題的永久連結">¶</a></h4>
+<p>經上述例子，可以在整理以下 async 版的特性：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__aenter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code> 分別為 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、__exit__`` 的 async 版本
+- 當 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> 或 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code> 的內容需要 <code class="docutils literal notranslate"><span class="pre">await</span></code> 時使用 async 版本</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__enter__</span></code> 使用時使用 <code class="docutils literal notranslate"><span class="pre">with</span></code>，<code class="docutils literal notranslate"><span class="pre">__aenter__</span></code> 使用時使用 <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code>
+- <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code> 需要在 async function 中執行</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="with-api">
+<h2>如何提供 <code class="docutils literal notranslate"><span class="pre">with</span></code> 可以使用的 API<a class="headerlink" href="#with-api" title="本標題的永久連結">¶</a></h2>
+<p>推薦使用 <a class="reference external" href="https://docs.python.org/3/library/contextlib.html">contextlib</a>，提供相關的工具，在此先介紹實作介面相關的功能</p>
+<section id="id6">
+<h3>實作 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code><a class="headerlink" href="#id6" title="本標題的永久連結">¶</a></h3>
+<p>依據前面介紹的原理，with 實際上就是在某些時間點執行 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code> 做到的，因此只需要實作即可</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">AbstractContextManager</span><span class="p">):</span>
+<span class="linenos"> 2</span>  <span class="c1"># 如果是要使用 __aenter__、__aexit__ 的情況，改使用 AbstractAsyncContextManager</span>
+<span class="linenos"> 3</span>  <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos"> 4</span>    <span class="c1"># accquire something</span>
+<span class="linenos"> 5</span>    <span class="k">return</span> <span class="bp">self</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span>  <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+<span class="linenos"> 8</span>    <span class="c1"># release something</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="k">with</span> <span class="n">Context</span><span class="p">()</span> <span class="k">as</span> <span class="n">c</span><span class="p">:</span>    <span class="c1"># 此處的 c 即為 __enter__ 中的 return</span>
+<span class="linenos">11</span>  <span class="n">ｃ</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>雖然不加 contextlib.AbstractContextManager 也可以，只是有加的情況比較好的 pylint 之類的檢查暗示，比較能提供檢查</p>
+</div>
+<p>但觀察上面的使用方式，當有部分的的資訊在 <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__exit__</span></code> 要共用時，就會顯得很麻煩，因此推薦使用 contextlib 提供的 contextmanager、asynccontextmanager</p>
+<section id="contextlib-contextmanager">
+<h4>使用 contextlib.contextmanager<a class="headerlink" href="#contextlib-contextmanager" title="本標題的永久連結">¶</a></h4>
+<p>依據上例 (AbstractContextManager) 中所使用的做法，改使用</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanger</span>
+<span class="linenos">2</span><span class="k">def</span> <span class="nf">context</span><span class="p">():</span>
+<span class="linenos">3</span>  <span class="c1"># 原預期在 __enter__ 會做的事</span>
+<span class="linenos">4</span>
+<span class="linenos">5</span>  <span class="c1"># 此處 yield 的效果相當於 __enter__ 中的 return</span>
+<span class="linenos">6</span>  <span class="c1"># 因此如果有需要提供外部介面時，在 yield 後傳出</span>
+<span class="linenos">7</span>  <span class="k">yield</span>
+<span class="linenos">8</span>  <span class="c1"># 原預期在 __exit__ 會做的事</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>例子</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanger</span>
+<span class="linenos"> 2</span><span class="k">def</span> <span class="nf">context</span><span class="p">():</span>
+<span class="linenos"> 3</span>  <span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 4</span>    <span class="n">resource</span> <span class="o">=</span> <span class="n">open_resource</span><span class="p">()</span>
+<span class="linenos"> 5</span>    <span class="c1"># 即使已經 yield 出去了，，但實際還沒有離開 tru-cache 的區間，所以 with 的區間如同在 yield 的位置</span>
+<span class="linenos"> 6</span>    <span class="k">yield</span> <span class="n">resource</span>
+<span class="linenos"> 7</span>  <span class="k">except</span><span class="p">:</span>
+<span class="linenos"> 8</span>    <span class="k">pass</span>
+<span class="linenos"> 9</span>  <span class="k">finally</span><span class="p">:</span>
+<span class="linenos">10</span>    <span class="n">resource</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>優點: 相比原生的 <cite>__enter__</cite>, <cite>__exit__</cite> 更直覺</p></li>
+<li><p>例子</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanger</span>
+<span class="linenos">2</span><span class="k">def</span> <span class="nf">open_connect_by_config</span><span class="p">(</span><span class="n">host_name</span><span class="p">):</span>
+<span class="linenos">3</span>  <span class="n">host</span><span class="p">,</span> <span class="n">user</span> <span class="o">=</span> <span class="n">get_host_info_by_config</span><span class="p">(</span><span class="n">host_name</span><span class="p">)</span>
+<span class="linenos">4</span>  <span class="k">with</span> <span class="n">asyncssh</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="linenos">5</span>    <span class="k">yield</span> <span class="n">conn</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="id7">
+<h2>使用情境<a class="headerlink" href="#id7" title="本標題的永久連結">¶</a></h2>
+<p>現在我們知道基本的運作方式了，以這樣的特性，整理有以下幾種常見的情境，適合使用 <cite>with</cite> (或 <cite>async with</cite>) 的情境，並舉幾個常見的例子</p>
+<section id="id8">
+<h3>資源管理<a class="headerlink" href="#id8" title="本標題的永久連結">¶</a></h3>
+<p>此區間中間才有資源的使用權，也因此在區間結束後，不管成功或是失敗，都需要釋放資源 (資源取得是常見例子)</p>
+<section id="id9">
+<h4>開檔<a class="headerlink" href="#id9" title="本標題的永久連結">¶</a></h4>
+<p>如 <a class="reference internal" href="#quickstart"><span class="std std-ref">快速入門</span></a> 範例</p>
+</section>
+<section id="id10">
+<h4>開啟遠端連線<a class="headerlink" href="#id10" title="本標題的永久連結">¶</a></h4>
+<p>如 <a class="reference internal" href="#aenter"><span class="std std-ref">__aenter__、 __aexit__ 的例子</span></a></p>
+</section>
+<section id="pytest-yield-function-fixture-tmpdir">
+<h4>pytest 中的  yield function 做的 fixture (已內建的 tmpdir 為例)<a class="headerlink" href="#pytest-yield-function-fixture-tmpdir" title="本標題的永久連結">¶</a></h4>
+<p>使用 pytest fixture 中的 <cite>tmpdir</cite> 功能，可以為每個測試 function 提供獨立的 dir 做測試，並在測試結束後移除此 dir</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span> <span class="nn">pytest</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">pathlib</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="k">def</span> <span class="nf">test_touch_file</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">):</span>
+<span class="linenos">4</span>    <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">))</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="exception">
+<h3>特化對於 Exception 的處理<a class="headerlink" href="#exception" title="本標題的永久連結">¶</a></h3>
+<section id="unittest-assertraises">
+<h4>unittest 中的 <code class="docutils literal notranslate"><span class="pre">assertRaises</span></code><a class="headerlink" href="#unittest-assertraises" title="本標題的永久連結">¶</a></h4>
+<p>可以收集區間中是否有發生指定 raise</p>
+<p>在寫 unittest 的時候，會需要測試錯誤的情況，是否有如預期拋出 exception，此時可以使用 unittest 的 assertRaises 來驗證區間中確實有拋出符合預期的 exception</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span> <span class="nn">unittest</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="k">class</span> <span class="nc">TestAssert</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<span class="linenos">4</span>    <span class="k">def</span> <span class="nf">test_asert_division_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">5</span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="linenos">6</span>            <span class="c1"># 此區間中必須拋出 `ZerDivisionError` 的 exception，沒有拋出或拋出別的 exception 都視為測試失敗</span>
+<span class="linenos">7</span>            <span class="nb">print</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>pytest.raises 也是相同的道理</p>
+</div>
+</section>
+<section id="contextlib-suppress">
+<h4>contextlib 中的 <cite>suppress</cite><a class="headerlink" href="#contextlib-suppress" title="本標題的永久連結">¶</a></h4>
+<p>可以指定部分的 exception 被忽略</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="linenos">2</span>  <span class="c1"># 因為有 suppress ZeroDivisionError 所以執行 1/0 將不會拋出 exception，或者說會被 with 接住</span>
+<span class="linenos">3</span>  <span class="nb">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>以此例子執行後將不會看到 ZeroDivisionError 的 exception，因為被 suppress 掉了</p>
+</section>
+</section>
+<section id="id11">
+<h3>收集區間中的資訊<a class="headerlink" href="#id11" title="本標題的永久連結">¶</a></h3>
+<section id="unittest-assertlogs">
+<h4>unittest 中的 <cite>assertLogs</cite><a class="headerlink" href="#unittest-assertlogs" title="本標題的永久連結">¶</a></h4>
+<p>可以收集 <cite>logging</cite> 所印出的 log</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span> <span class="nn">unittest</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="k">class</span> <span class="nc">TestLogging</span>
+<span class="linenos">4</span>  <span class="k">def</span> <span class="nf">test_log_debug</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="linenos">5</span>    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertLogs</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cm</span><span class="p">:</span>
+<span class="linenos">6</span>      <span class="c1"># 這裡面的 logging 如果是 main 的會被 filter 出來，並存在 cm.outputs 中</span>
+<span class="linenos">7</span>      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;this will be catched by cm&#39;</span><span class="p">)</span>
+<span class="linenos">8</span>    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;this will be catched by cm&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="contextlib-redirect-stdout-redirect-stderr">
+<h4>contextlib 中 redirect_stdout, redirect_stderr<a class="headerlink" href="#contextlib-redirect-stdout-redirect-stderr" title="本標題的永久連結">¶</a></h4>
+<p>可以將區間中的 stdout(也就是 print) 和 stderr，導到指定的 steam 中 (檔案也是種 stream 的概念)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="s1">&#39;output.txt&#39;</span><span class="p">):</span>
+<span class="linenos">4</span>  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;this will be write to output.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="hook">
+<h4>在區間前後的前處理與後處理 (hook 的概念)<a class="headerlink" href="#hook" title="本標題的永久連結">¶</a></h4>
+<p>最簡單的用法就是在前後插 log，下面舉個前後印訊息的簡單範例</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanger</span>
+<span class="linenos"> 5</span><span class="k">def</span> <span class="nf">log_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+<span class="linenos"> 6</span>  <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Start cmd: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span>  <span class="c1"># 想要傳遞資訊給 with 的時候使用很方便</span>
+<span class="linenos"> 9</span>  <span class="k">yield</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span>  <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finish cmd </span><span class="si">%s</span><span class="s1">:&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="k">def</span> <span class="nf">run_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+<span class="linenos">14</span>  <span class="k">with</span> <span class="n">log</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+<span class="linenos">15</span>    <span class="c1"># create_subprocess_shell 這個 function 可以執行如 shell 一般的指令</span>
+<span class="linenos">16</span>    <span class="n">ret</span> <span class="o">=</span> <span class="n">subprocessing</span><span class="o">.</span><span class="n">create_subprocess_shell</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+<span class="linenos">17</span>    <span class="c1"># 此處的 ret 無法方便的傳到 log，供 __exit__ 的流程使用</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span>    <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+</div>
+<p>但也如上方說明，如果想要印的還有執行的結果，也就需要將 ret 傳給 log 供後續的流程使用，但以此情況不容易做到，
+因此以此情況，建議使用 decorator (會在其他篇介紹)，擅長的也不一樣</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>如果其中也有需要 with 的部分可以搭配使用
+TODO: link 到 wrap</p>
+</div>
+</section>
+</section>
+</section>
+<section id="id12">
+<h2>參考資料<a class="headerlink" href="#id12" title="本標題的永久連結">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://stephlin.github.io/python/2021/01/02/context-manager-in-python.html">Context Management in Python</a></p></li>
+</ul>
+</section>
+</section>
+
+<div class="section">
+    
+
+<div class="section">
+  <span style="float: left">
+     
+    <a href="../rmap.html">
+      <i class="fa fa-arrow-circle-left"></i> Linux RMAP
+    </a>
+    
+  </span>
+  <span>&nbsp;</span>
+  <span style="float: right">
+     
+    <a href="decorator.html">
+      Python 中用 @ 讓函數賦予新特性 <i
+        class="fa fa-arrow-circle-right"
+      ></i
+      >
+    </a>
+    
+  </span>
+</div>
+  
+</div>
+
+          </div>
+          <div class="page-nav">
+            <div class="inner"><ul class="page-nav">
+</ul><div class="footer" role="contentinfo">
+      &#169; 版權所有 2022, yoyo。
+    <br>
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.2 with <a href="https://github.com/schettino72/sphinx_press_theme">Press Theme</a> 0.8.0.
+</div>
+            </div>
+          </div>
+      </page>
+    </div></div>
+    
+    
+  </body>
+</html>
