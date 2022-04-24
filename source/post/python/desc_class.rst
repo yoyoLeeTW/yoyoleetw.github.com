@@ -7,6 +7,8 @@
 
   descriptor class
 
+.. _attr_class:
+
 ============================================
 Python 中客製 attribute - descriptor class
 ============================================
