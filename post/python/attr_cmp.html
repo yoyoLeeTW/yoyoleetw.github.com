@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html  lang="zh_TW">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+      <title>Python 各種 attribute 取得方式的比較</title>
+    
+          <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+          <link rel="stylesheet" href="../../_static/theme.css " type="text/css" />
+          <link rel="stylesheet" href="../../_static/css/style.css" type="text/css" />
+      
+      <!-- sphinx script_files -->
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+
+      
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="../../_static/theme-vendors.js"></script> -->
+      <script src="../../_static/theme.js" defer></script>
+      <link rel="canonical" href="https://yoyoleetw.github.io/post/python/attr_cmp.html" />
+    
+  <link rel="index" title="索引" href="../../genindex.html" />
+  <link rel="search" title="搜尋" href="../../search.html" />   
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="../../blog/atom.xml"
+  title="yoyo's Blog"
+/>
+ 
+<link href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet" />
+
+<style type="text/css">
+  ul.ablog-archive {
+    list-style: none;
+    overflow: auto;
+    margin-left: 0px;
+  }
+  ul.ablog-archive li {
+    float: left;
+    margin-right: 5px;
+    font-size: 80%;
+  }
+  ul.postlist a {
+    font-style: italic;
+  }
+  ul.postlist-style-disc {
+    list-style-type: disc;
+  }
+  ul.postlist-style-none {
+    list-style-type: none;
+  }
+  ul.postlist-style-circle {
+    list-style-type: circle;
+  }
+</style>
+
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses"><navbar @toggle-sidebar="toggleSidebar">
+  <router-link to="../../index.html" class="home-link">
+    
+      <span class="site-name">yoyo&#39;s blog</span>
+    
+  </router-link>
+
+  <div class="links">
+    <navlinks class="can-hide">
+
+
+
+    </navlinks>
+  </div>
+</navbar>
+
+      
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+        <sidebar @toggle-sidebar="toggleSidebar">
+          
+          <navlinks>
+            
+
+
+
+            
+          </navlinks><div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">快速搜尋</span>
+    <div class="searchformwrapper">
+      <form class="search" action="../../search.html" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="搜尋" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div><div class="sidebar-links" role="navigation" aria-label="main navigation">
+  
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="../../index.html#recent-posts">recent posts</a></span>
+      </p>
+      <ul class="">
+        
+          <li class="toctree-l1 ">
+            
+              <a href="../../blog.html" class="reference internal ">Blog</a>
+            
+
+            
+          </li>
+
+        
+      </ul>
+    </div>
+  
+</div>
+        </sidebar>
+
+      <page>
+          <div class="body-header" role="navigation" aria-label="navigation">
+  
+  <ul class="breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+    
+    <li>Python 各種 attribute 取得方式的比較</li>
+  </ul>
+  
+
+  <ul class="page-nav">
+</ul>
+  
+</div>
+<hr>
+          <div class="content" role="main" v-pre>
+             <section id="python-attribute">
+<h1>Python 各種 attribute 取得方式的比較<a class="headerlink" href="#python-attribute" title="本標題的永久連結">¶</a></h1>
+<section id="id1">
+<h2>前言<a class="headerlink" href="#id1" title="本標題的永久連結">¶</a></h2>
+<p><a class="reference internal" href="desc_class.html#attr-class"><span class="std std-ref">class descriptor</span></a>、<a class="reference internal" href="attr_hook.html#attr_hook"><span class="std std-ref">attribute hook</span></a>
+或是使用一般的 attribte 來存取，都是種取得 attribute 的方式，既然每種方式都有可以做到，當遇到都提供的時候，
+實際上的運作方式會是什麼呢？也就是這篇要介紹給大家的。</p>
+</section>
+<section id="attribute">
+<h2>一般的 attribute 行為<a class="headerlink" href="#attribute" title="本標題的永久連結">¶</a></h2>
+<p>在理解交互作用前，需要先理解一般我們常用的 attribute 是如何運作的，才好在後面了解同時發生的狀況。</p>
+<section id="attribute-object">
+<h3>attribute 直接放在 object 裡的方式<a class="headerlink" href="#attribute-object" title="本標題的永久連結">¶</a></h3>
+<p>一般最常見使用 attribute 的方式是直接在 object 存入，並直接取出使用，如下例子，原本 <code class="docutils literal notranslate"><span class="pre">Dog</span></code> 這個
+class 裡面就沒有定義 <code class="docutils literal notranslate"><span class="pre">_name</span></code>，而是在 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 裡面才直接以 <code class="docutils literal notranslate"><span class="pre">self._name</span> <span class="pre">=</span> <span class="pre">name</span></code> 的方式
+，動態的在 object 裡建立一個 <code class="docutils literal notranslate"><span class="pre">_name</span></code> 的 attribute 並儲存為 <code class="docutils literal notranslate"><span class="pre">name</span></code>。</p>
+<p>這裡以底層精準來講是存在 object 中的 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> 裡，所以以 <code class="docutils literal notranslate"><span class="pre">self._name</span> <span class="pre">=</span> <span class="pre">name</span></code> 來說，
+底層實際上是做 <code class="docutils literal notranslate"><span class="pre">obj.__dict__['_name']</span> <span class="pre">=</span> <span class="pre">name</span></code>，就變成了 dict 的方式，就可以很好的理解了。</p>
+<p>同理 <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">self._name</span></code> 是取出 object 裡面 <code class="docutils literal notranslate"><span class="pre">_name</span></code> 的 attriute，底層的運作方式為
+<code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">self.__dict__['_name']</span></code>，所以也可以直接以 dict 的方式理解。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Dog</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+  <span class="k">def</span> <span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">food</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> eats </span><span class="si">{</span><span class="n">food</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="class-attribute">
+<h3>取得 class 的 attribute<a class="headerlink" href="#class-attribute" title="本標題的永久連結">¶</a></h3>
+<p>我們知道可以在 class 宣告的時候就賦予值進 class，這樣之後即使拿到的是物件也可以取得，如下例子，
+在說明之前，我們需要先理解一下 class 究竟把此值存在哪裡，以及怎麼存，以此例來說，實際的存放位置在
+<code class="docutils literal notranslate"><span class="pre">Dog.__dict__['leg_num']</span></code> 裡面，因此實際上的存取方式都和 object 的情況一樣，只是對象由 object
+變成了 class 而已。</p>
+<p>如果 class 是有繼承的話，會依 <code class="docutils literal notranslate"><span class="pre">__mro__</span></code> 的順序，依序去找，找到的話就回傳，就不會繼續往後找了，
+如果都找不到，就跳 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Dog</span><span class="p">:</span>
+  <span class="n">leg_num</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="n">dog</span> <span class="o">=</span> <span class="n">Dog</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">dog</span><span class="o">.</span><span class="n">leg_num</span><span class="p">)</span>  <span class="c1"># 4</span>
+</pre></div>
+</div>
+</section>
+<section id="object-class-attribute">
+<h3>object 和 class 之間 attribute 關係<a class="headerlink" href="#object-class-attribute" title="本標題的永久連結">¶</a></h3>
+<p>實際在取 object 的 attribute 時，會先嘗試從 object 裡面找，如果找不到的時候，才會在 class 裡面找，
+因此以上面的例子，實際上 <code class="docutils literal notranslate"><span class="pre">dog.leg_num</span></code> 拿到的會是 4，而不會是跳 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>。</p>
+<p>現在我們理解了取的狀況，換來看賦值的狀況，當執行 <code class="docutils literal notranslate"><span class="pre">dog.leg_num</span> <span class="pre">=</span> <span class="pre">3</span></code> 的情況下，實際上就直接存到
+object 上，也就是 <code class="docutils literal notranslate"><span class="pre">dog.__dict__['leg_num']</span> <span class="pre">=</span> <span class="pre">3</span></code>，這樣才能符合針對 object 設定的時候，不影響到
+class 的這個行為，因此如果確定是要改 class 的 attribute 時，請直接針對 class 本身修改，以上面例子來說
+，是 <code class="docutils literal notranslate"><span class="pre">Dog.leg_num</span> <span class="pre">=</span> <span class="pre">3</span></code>，實際上也可以藉由 <code class="docutils literal notranslate"><span class="pre">dog.__class__.leg_num</span> <span class="pre">=</span> <span class="pre">3</span></code> 達到一樣的效果。</p>
+</section>
+</section>
+<section id="attribute-class-descriptor">
+<h2>一般 attribute 的存取方式，和 class descriptor 混用時<a class="headerlink" href="#attribute-class-descriptor" title="本標題的永久連結">¶</a></h2>
+<p>建議在閱讀後面的內容前，先讀過 <a class="reference internal" href="desc_class.html#attr-class"><span class="std std-ref">class descriptor</span></a>，會比較容易理解。
+如果想快速了解行為就好，可以直接跳到「<a class="reference internal" href="#flow-summary"><span class="std std-ref">取值時的檢查流程整理</span></a>」。</p>
+<section id="class-descriptor-non-data-descriptor">
+<h3>當 class descriptor 為 non-data descriptor 時<a class="headerlink" href="#class-descriptor-non-data-descriptor" title="本標題的永久連結">¶</a></h3>
+<p>non-data descriptor 也就是只有實作 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 沒有實作 <code class="docutils literal notranslate"><span class="pre">__set__</span></code> 的 descriptor，
+而其中 non-data 的原因就是因為無法 set，所以無法把此 descriptor 當作一個 data 看待
+(data 需要不管存取都可以)。</p>
+<p>但如果真的要硬做，還是可以對一個 non-data descriptor 的 attribute 做賦值的動作，這時候為了符合行為，
+只能存到 object 中，且因為實際上有 set 的動作了，應該要拿到賦值之後的值，所以取值時，應該要取到
+object 內的，而非 non-data descriptor 回傳。</p>
+</section>
+<section id="class-descriptor-data-descriptor">
+<h3>當 class descriptor 為 data descriptor 時<a class="headerlink" href="#class-descriptor-data-descriptor" title="本標題的永久連結">¶</a></h3>
+<p>data descriptor 也就是有實作 <code class="docutils literal notranslate"><span class="pre">__get__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__set__</span></code> 的 descriptor。</p>
+<p>因為此 descriptor 可以做到取和設，所以賦值的部分不能直接存到 object 中，因此取值的時候應該
+data descriptor 會比 object 的取值優先權來得高。</p>
+</section>
+</section>
+<section id="flow-summary">
+<span id="id2"></span><h2>取值時的檢查流程整理<a class="headerlink" href="#flow-summary" title="本標題的永久連結">¶</a></h2>
+<section id="id3">
+<h3>一般 attribute 的存取方式，和 class descriptor 混用時<a class="headerlink" href="#id3" title="本標題的永久連結">¶</a></h3>
+<p>上面講了這麼多，可以簡單地總結 attribute 取值檢查的流程，以下取自
+<a class="reference external" href="https://docs.python.org/3/howto/descriptor.html#invocation-from-an-instance">官方教學</a> 。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">object_getattribute</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+  <span class="n">null</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+  <span class="n">objtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+  <span class="n">cls_var</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">objtype</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">null</span><span class="p">)</span>
+  <span class="n">descr_get</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cls_var</span><span class="p">),</span> <span class="s1">&#39;__get__&#39;</span><span class="p">,</span> <span class="n">null</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">descr_get</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">null</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cls_var</span><span class="p">),</span> <span class="s1">&#39;__set__&#39;</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cls_var</span><span class="p">),</span> <span class="s1">&#39;__delete__&#39;</span><span class="p">)):</span>
+      <span class="k">return</span> <span class="n">descr_get</span><span class="p">(</span><span class="n">cls_var</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="p">)</span>       <span class="c1"># data descriptor</span>
+  <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;__dict__&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">vars</span><span class="p">(</span><span class="n">obj</span><span class="p">)[</span><span class="n">name</span><span class="p">]</span>                          <span class="c1"># instance variable</span>
+  <span class="k">if</span> <span class="n">descr_get</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">null</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">descr_get</span><span class="p">(</span><span class="n">cls_var</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="p">)</span>         <span class="c1"># non-data descriptor</span>
+  <span class="k">if</span> <span class="n">cls_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">null</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">cls_var</span>                                  <span class="c1"># class variable</span>
+  <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="attribte-hook">
+<h3>再加上 attribte hook 混用時<a class="headerlink" href="#attribte-hook" title="本標題的永久連結">¶</a></h3>
+<p>內容在 <a class="reference internal" href="attr_hook.html#attr_hook"><span class="std std-ref">attribute hook</span></a> 提過，但在了解
+「一般 attribute 的存取方式，和 class descriptor 混用時」再來看一次會更清楚，實際上，上述的
+<code class="docutils literal notranslate"><span class="pre">object_getattribute</span></code> 也就是預設的 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 行為，因此整體流程會事先看
+<code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> (如果沒有實作，就是用上面的 <code class="docutils literal notranslate"><span class="pre">object_getattribute</span></code>) 有沒有找到，
+如果沒有找到 (跳 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> 表示沒有找到)，就看看有沒有 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code>，
+如果有就嘗試用 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 拿看看，沒有就直接跳 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getattr_hook</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+  <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="s1">&#39;__getattr__&#39;</span><span class="p">):</span>
+      <span class="k">raise</span>
+  <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id5">
+<h2>參考<a class="headerlink" href="#id5" title="本標題的永久連結">¶</a></h2>
+<p>整篇擷取自 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html">官方文件</a> 取其比較常用的部分，
+如想了解更多可參考。</p>
+</section>
+</section>
+
+<div class="section">
+    
+
+<div class="section">
+  <span style="float: left">
+     
+    <a href="attr_hook.html">
+      <i class="fa fa-arrow-circle-left"></i> Python 中為定義的 attribute 統一操作 – attriubte hook
+    </a>
+    
+  </span>
+  <span>&nbsp;</span>
+  <span style="float: right">
+    
+  </span>
+</div>
+  
+</div>
+
+          </div>
+          <div class="page-nav">
+            <div class="inner"><ul class="page-nav">
+</ul><div class="footer" role="contentinfo">
+      &#169; 版權所有 2022, yoyo。
+    <br>
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.2 with <a href="https://github.com/schettino72/sphinx_press_theme">Press Theme</a> 0.8.0.
+</div>
+            </div>
+          </div>
+      </page>
+    </div></div>
+    
+    
+  </body>
+</html>

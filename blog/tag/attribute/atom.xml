@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh_TW">
   <id>https://yoyoleetw.github.io</id>
   <title>yoyo's Blog - Posts tagged attribute</title>
-  <updated>2022-04-15T11:18:58.880896+00:00</updated>
+  <updated>2022-04-24T09:17:48.202497+00:00</updated>
   <link href="https://yoyoleetw.github.io"/>
   <link href="https://yoyoleetw.github.io/blog/tag/attribute/atom.xml" rel="self"/>
   <generator uri="https://ablog.readthedocs.org/" version="0.10.23">ABlog</generator>
@@ -23,5 +23,39 @@
     <category term="descriptor" label="descriptor"/>
     <category term="attribute" label="attribute"/>
     <published>2022-03-20T00:00:00+00:00</published>
+  </entry>
+  <entry>
+    <id>https://yoyoleetw.github.io/zh_TW/post/python/attr_hook.html</id>
+    <title>Python 中為定義的 attribute 統一操作 – attriubte hook</title>
+    <updated>2022-04-23T00:00:00+00:00</updated>
+    <author>
+      <name>Yo-Yo Li</name>
+    </author>
+    <content type="html">&lt;div class="ablog-post-excerpt docutils container"&gt;
+&lt;p&gt;attribute hook&lt;/p&gt;
+&lt;/div&gt;
+</content>
+    <link href="https://yoyoleetw.github.io/zh_TW/post/python/attr_hook.html" rel="alternate"/>
+    <summary>attribute hook</summary>
+    <category term="Python" label="Python"/>
+    <category term="attribute" label="attribute"/>
+    <published>2022-04-23T00:00:00+00:00</published>
+  </entry>
+  <entry>
+    <id>https://yoyoleetw.github.io/zh_TW/post/python/attr_cmp.html</id>
+    <title>Python 各種 attribute 取得方式的比較</title>
+    <updated>2022-04-24T00:00:00+00:00</updated>
+    <author>
+      <name>Yo-Yo Li</name>
+    </author>
+    <content type="html">&lt;div class="ablog-post-excerpt docutils container"&gt;
+&lt;p&gt;class descriptor v.s. value saved in object&lt;/p&gt;
+&lt;/div&gt;
+</content>
+    <link href="https://yoyoleetw.github.io/zh_TW/post/python/attr_cmp.html" rel="alternate"/>
+    <summary>class descriptor v.s. value saved in object</summary>
+    <category term="Python" label="Python"/>
+    <category term="attribute" label="attribute"/>
+    <published>2022-04-24T00:00:00+00:00</published>
   </entry>
 </feed>

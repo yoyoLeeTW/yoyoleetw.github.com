@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html  lang="zh_TW">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+      <title>Python 中為定義的 attribute 統一操作 – attriubte hook</title>
+    
+          <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+          <link rel="stylesheet" href="../../_static/theme.css " type="text/css" />
+          <link rel="stylesheet" href="../../_static/css/style.css" type="text/css" />
+      
+      <!-- sphinx script_files -->
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+
+      
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="../../_static/theme-vendors.js"></script> -->
+      <script src="../../_static/theme.js" defer></script>
+      <link rel="canonical" href="https://yoyoleetw.github.io/post/python/attr_hook.html" />
+    
+  <link rel="index" title="索引" href="../../genindex.html" />
+  <link rel="search" title="搜尋" href="../../search.html" />   
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="../../blog/atom.xml"
+  title="yoyo's Blog"
+/>
+ 
+<link href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet" />
+
+<style type="text/css">
+  ul.ablog-archive {
+    list-style: none;
+    overflow: auto;
+    margin-left: 0px;
+  }
+  ul.ablog-archive li {
+    float: left;
+    margin-right: 5px;
+    font-size: 80%;
+  }
+  ul.postlist a {
+    font-style: italic;
+  }
+  ul.postlist-style-disc {
+    list-style-type: disc;
+  }
+  ul.postlist-style-none {
+    list-style-type: none;
+  }
+  ul.postlist-style-circle {
+    list-style-type: circle;
+  }
+</style>
+
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses"><navbar @toggle-sidebar="toggleSidebar">
+  <router-link to="../../index.html" class="home-link">
+    
+      <span class="site-name">yoyo&#39;s blog</span>
+    
+  </router-link>
+
+  <div class="links">
+    <navlinks class="can-hide">
+
+
+
+    </navlinks>
+  </div>
+</navbar>
+
+      
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+        <sidebar @toggle-sidebar="toggleSidebar">
+          
+          <navlinks>
+            
+
+
+
+            
+          </navlinks><div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">快速搜尋</span>
+    <div class="searchformwrapper">
+      <form class="search" action="../../search.html" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="搜尋" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div><div class="sidebar-links" role="navigation" aria-label="main navigation">
+  
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="../../index.html#recent-posts">recent posts</a></span>
+      </p>
+      <ul class="">
+        
+          <li class="toctree-l1 ">
+            
+              <a href="../../blog.html" class="reference internal ">Blog</a>
+            
+
+            
+          </li>
+
+        
+      </ul>
+    </div>
+  
+</div>
+        </sidebar>
+
+      <page>
+          <div class="body-header" role="navigation" aria-label="navigation">
+  
+  <ul class="breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+    
+    <li>Python 中為定義的 attribute 統一操作 – attriubte hook</li>
+  </ul>
+  
+
+  <ul class="page-nav">
+</ul>
+  
+</div>
+<hr>
+          <div class="content" role="main" v-pre>
+             <section id="python-attribute-attriubte-hook">
+<span id="attr-hook"></span><h1>Python 中為定義的 attribute 統一操作 – attriubte hook<a class="headerlink" href="#python-attribute-attriubte-hook" title="本標題的永久連結">¶</a></h1>
+<section id="id1">
+<h2>前言<a class="headerlink" href="#id1" title="本標題的永久連結">¶</a></h2>
+<p>我們都知道如果想要讓一個 class 有某個 attribute，只需要 assign 需要的變數名即可，如 <code class="docutils literal notranslate"><span class="pre">a.x</span> <span class="pre">=</span> <span class="pre">1</span></code>，
+就可以讓 a 這個 object 有 x 這個 attribute，且為 1，再進階一點可以使用
+<a class="reference internal" href="desc_class.html#attr-class"><span class="std std-ref">class descriptor</span></a> 的方式客製化，但如果想要處理的並非固定的 attribute 名
+而已呢？這時候就需要今天要介紹的功能來實作了。</p>
+</section>
+<section id="id2">
+<h2>快速入門<a class="headerlink" href="#id2" title="本標題的永久連結">¶</a></h2>
+<p>如果想要有個可以使用 attribute 的存取方式來使用的 dict，就很適合使用這種方式來實作：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AttrDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="fm">__dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">({})</span>
+    <span class="n">names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">names</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">AttrDict</span><span class="p">()</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">obj</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>雖然實際上也有 <a class="reference external" href="https://pypi.org/project/attrdict/">套件</a> 提供，但目前看下來許多的
+open source 需要的時候也都是自己實作，實際上也是沒有什麼難度。</p>
+</div>
+<p>我們先從取得的方式看起，Python 裡面提供了 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 的方式可以客製化，用法上是如果使用
+<code class="docutils literal notranslate"><span class="pre">obj.x</span></code> 來取得 <code class="docutils literal notranslate"><span class="pre">x</span></code> 這個 attribute，因為沒有 <code class="docutils literal notranslate"><span class="pre">x</span></code> 這個 attribute 在原本 class 的定義裡
+(先知道有此性質就好，後面會詳細解釋)，這時候就會交給 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 這個 magic method 來處理，
+其中的 <code class="docutils literal notranslate"><span class="pre">key</span></code> 拿到的就會是 attribute 的名字，在此例中也就是 <code class="docutils literal notranslate"><span class="pre">x</span></code>。</p>
+<p>在理解了 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 的用法後，我們再回到原本想實作可以使用 attribute 取得的 dict 吧，
+經由上面的說明可以知道要提供 class 中多個值的 attribute，可以使用 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 的方式來提供，
+且因為 <code class="docutils literal notranslate"><span class="pre">AttrDict</span></code> 繼承了 dict，因此只需要在 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 裡面使用 dict 的方式取得需要的
+key 就可以了，舉例來說，想要取得 <code class="docutils literal notranslate"><span class="pre">obj.x</span></code> 時，會執行 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 的 method，且 key 帶入
+<code class="docutils literal notranslate"><span class="pre">x</span></code>，而只需要轉拿 <code class="docutils literal notranslate"><span class="pre">obj['x']</span></code> 就可以了，這邊有個要注意的是，如果沒有此 attribute 時，會有
+<code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>，和 dict 裡面的 key 沒有時，跳的 <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> 不一樣，因此這邊需要特別針
+對此狀況處理，所以才會使用 try-except 的方式接 <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> 改跳 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>。</p>
+<p>再來換賦值，Python 裡面提供了 <code class="docutils literal notranslate"><span class="pre">__setattr__</span></code> 的方式可以客製化，用法上與 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 差不多，
+差別在於是 <code class="docutils literal notranslate"><span class="pre">obj.x</span> <span class="pre">=</span> <span class="pre">1</span></code> 之類的賦值行為時會執行，其中 <code class="docutils literal notranslate"><span class="pre">key</span></code> 會是 <code class="docutils literal notranslate"><span class="pre">x</span></code>，<code class="docutils literal notranslate"><span class="pre">value</span></code> 會是 <code class="docutils literal notranslate"><span class="pre">1</span></code>。</p>
+<p>例子中還有看到實作了 <code class="docutils literal notranslate"><span class="pre">__dir__</span></code> 這個 method，原因在於 <code class="docutils literal notranslate"><span class="pre">dir()</span></code> 這個 function 會取得一個 object
+有多少 attribute 可以提供，底層也就是去執行此 object 的 <code class="docutils literal notranslate"><span class="pre">__dir__</span></code>，因此在 <code class="docutils literal notranslate"><span class="pre">AttrDict</span></code> 中，所
+有 item 的內容也屬於 attribute，因此在符合 <code class="docutils literal notranslate"><span class="pre">dir()</span></code> 介面的需求下，實際上還要提供 item 的 key。</p>
+</section>
+<section id="getattr-v-s-getattribute">
+<h2><code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> v.s. <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code><a class="headerlink" href="#getattr-v-s-getattribute" title="本標題的永久連結">¶</a></h2>
+<p>相信第一此在查的時候很容易查到 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 兩種，且不容易分出
+兩者的差別，因此這裡直接引用 <a class="reference external" href="https://docs.python.org/3/howto/descriptor.html">官方的說明</a>
+，相信可以又更好地理解。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getattr_hook</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+  <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="s1">&#39;__getattr__&#39;</span><span class="p">):</span>
+      <span class="k">raise</span>
+  <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>此 <code class="docutils literal notranslate"><span class="pre">getattr_hook</span></code> 可以理解為 <code class="docutils literal notranslate"><span class="pre">obj.x</span></code> 取得時，會直接轉成執行 <code class="docutils literal notranslate"><span class="pre">getattr_hook(obj,</span> <span class="pre">'x')</span></code>，
+因此可以看出來， <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 算是如果 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 處理到的話，又發現有
+<code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 可以處理，就會嘗試看看。</p>
+<p>由此可知，不管是什麼 attribute 的取得都會經 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code>，其中連 class method 的取得都是，
+因此在使用 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 要小心使用，如果使用不當，可能會連 class method 這種預期照
+原本行為取得即可的操作都會被覆蓋掉，因此建議一般來說 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 就可以處理的情況，不會使用到
+<code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code>。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>實際上原本的 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 會做很多事，詳細下一篇會介紹 <code class="docutils literal notranslate"><span class="pre">__getattribute__</span></code> 的實際行為。</p>
+</div>
+</section>
+</section>
+
+<div class="section">
+    
+
+<div class="section">
+  <span style="float: left">
+     
+    <a href="desc_class.html">
+      <i class="fa fa-arrow-circle-left"></i> Python 中客製 attribute - descriptor class
+    </a>
+    
+  </span>
+  <span>&nbsp;</span>
+  <span style="float: right">
+     
+    <a href="attr_cmp.html">
+      Python 各種 attribute 取得方式的比較 <i
+        class="fa fa-arrow-circle-right"
+      ></i
+      >
+    </a>
+    
+  </span>
+</div>
+  
+</div>
+
+          </div>
+          <div class="page-nav">
+            <div class="inner"><ul class="page-nav">
+</ul><div class="footer" role="contentinfo">
+      &#169; 版權所有 2022, yoyo。
+    <br>
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.2 with <a href="https://github.com/schettino72/sphinx_press_theme">Press Theme</a> 0.8.0.
+</div>
+            </div>
+          </div>
+      </page>
+    </div></div>
+    
+    
+  </body>
+</html>
