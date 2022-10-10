@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html  lang="zh_TW">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+      <title>用例子學 class</title>
+    
+          <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+          <link rel="stylesheet" href="../../_static/theme.css " type="text/css" />
+          <link rel="stylesheet" href="../../_static/css/style.css" type="text/css" />
+      
+      <!-- sphinx script_files -->
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+
+      
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="../../_static/theme-vendors.js"></script> -->
+      <script src="../../_static/theme.js" defer></script>
+      <link rel="canonical" href="https://yoyoleetw.github.io/post/python/class.html" />
+    
+  <link rel="index" title="索引" href="../../genindex.html" />
+  <link rel="search" title="搜尋" href="../../search.html" />   
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="../../blog/atom.xml"
+  title="yoyo's Blog"
+/>
+ 
+<link href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet" />
+
+<style type="text/css">
+  ul.ablog-archive {
+    list-style: none;
+    overflow: auto;
+    margin-left: 0px;
+  }
+  ul.ablog-archive li {
+    float: left;
+    margin-right: 5px;
+    font-size: 80%;
+  }
+  ul.postlist a {
+    font-style: italic;
+  }
+  ul.postlist-style-disc {
+    list-style-type: disc;
+  }
+  ul.postlist-style-none {
+    list-style-type: none;
+  }
+  ul.postlist-style-circle {
+    list-style-type: circle;
+  }
+</style>
+
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses"><navbar @toggle-sidebar="toggleSidebar">
+  <router-link to="../../index.html" class="home-link">
+    
+      <span class="site-name">yoyo&#39;s blog</span>
+    
+  </router-link>
+
+  <div class="links">
+    <navlinks class="can-hide">
+
+
+
+    </navlinks>
+  </div>
+</navbar>
+
+      
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+        <sidebar @toggle-sidebar="toggleSidebar">
+          
+          <navlinks>
+            
+
+
+
+            
+          </navlinks><div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">快速搜尋</span>
+    <div class="searchformwrapper">
+      <form class="search" action="../../search.html" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="搜尋" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div><div class="sidebar-links" role="navigation" aria-label="main navigation">
+  
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="../../index.html#recent-posts">recent posts</a></span>
+      </p>
+      <ul class="">
+        
+          <li class="toctree-l1 ">
+            
+              <a href="../../blog.html" class="reference internal ">Blog</a>
+            
+
+            
+          </li>
+
+        
+      </ul>
+    </div>
+  
+</div>
+        </sidebar>
+
+      <page>
+          <div class="body-header" role="navigation" aria-label="navigation">
+  
+  <ul class="breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+    
+    <li>用例子學 class</li>
+  </ul>
+  
+
+  <ul class="page-nav">
+</ul>
+  
+</div>
+<hr>
+          <div class="content" role="main" v-pre>
+             <section id="class">
+<span id="id1"></span><h1>用例子學 class<a class="headerlink" href="#class" title="本標題的永久連結">¶</a></h1>
+<section id="id2">
+<h2>前言<a class="headerlink" href="#id2" title="本標題的永久連結">¶</a></h2>
+<p>此篇會用舉例的方式解釋 class 的用法，並多少說明中間的原理，聽不懂原理也沒關係，只要可以依據範例知道中間個關係，
+並且以模仿的方式使用，基本上就可以處理大部分的狀況了，等已經熟練之後，如果有遇到特別的狀況，可以再回來尋找原理的部分，再來閱讀其他進階的文章，
+希望以這樣的方式可以讓新手在剛接觸時可以少點銜接障礙。</p>
+</section>
+<section id="id3">
+<h2>class 有資訊整理的能力<a class="headerlink" href="#id3" title="本標題的永久連結">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Apple</span><span class="p">:</span>
+  <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
+  <span class="n">shape</span> <span class="o">=</span> <span class="s1">&#39;ball&#39;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">Apple</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>  <span class="c1"># red</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Apple</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># ball</span>
+</pre></div>
+</div>
+<p>class 像是個 section 一樣，可以把相關的資訊整理在一起，之後要取得資訊時，
+可以用 section 的名字取得其內容，比較好管理。
+以此例子來說，<cite>Apple</cite> 這個 class 就像是個 section 一樣，
+section 裡面放了 color 和 shape 兩個 attribute，attribute 可以使用 <cite>Apple.color</cite> 的方式取出其內容，甚至可以修改其內容。</p>
+<p>但切記並非每個東西放到 class 裡都會是此行為，像是 function 就不是，後面會特別說明，詳細原因是因為 function 的 <cite>__get__</cite> 性質，
+有興趣的可以看 <a class="reference internal" href="desc_class.html#attr-class"><span class="std std-ref">另一篇</span></a> 的教學。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Fruit</span><span class="p">:</span>
+  <span class="k">class</span> <span class="nc">Apple</span><span class="p">:</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
+
+  <span class="k">class</span> <span class="nc">Banana</span><span class="p">:</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;yellow&#39;</span>
+</pre></div>
+</div>
+<p>如同 section 可以多層一樣，class 也可以有多層，來做進一步的分類。
+以此例子來說，就可以使用 <cite>Fruit.Apple.color</cite> 的方式來取得蘋果的顏色。</p>
+</section>
+<section id="class-object">
+<h2>class 與 object 之間的關係<a class="headerlink" href="#class-object" title="本標題的永久連結">¶</a></h2>
+<p>而在 python 裡面，class 實際上也就是一個物件，所以上面看到一些 <cite>Apple.color</cite> 都是物件可以有的操作，
+但是不覺得我要一個水果的行為，就需要寫一個 class 覺得很累嗎？因此我們可以把共通的地方抽象出來，這就是要用到 class 的特性。</p>
+<section id="class-instance">
+<h3>class 與 instance 之間的關係<a class="headerlink" href="#class-instance" title="本標題的永久連結">¶</a></h3>
+<p>在認識這些之前，需要先理解 class 和 instance 之間的關係：
+class 經歷實例化的過程 (也可以說是 new 的過程) 會得到一個 instance，此 instance 的行為是由 class 決定的，
+所以可以想像，對於一個 instance 而言，其 class 就像是他的 spec。</p>
+<p>舉例來說，可以定義出一個叫 Person 的 class，之後經過 new 的過程，可以得到一個叫 edward 的 instance，而此 edward instance 的行為皆由 Person 這個 class 決定，
+如他會有自己的名字 (e.g. <cite>edward.name</cite>) 或是他可以有吃的行為 (e.g. <cite>edward.eat(apple)</cite>)，而其中的 <cite>name</cite> 和 <cite>eat</cite> 就是由 class 定義來的。</p>
+<p>藉由上面的例子，會知道想要做出想要的 instance 行為，需要知道此行為的 class 要怎麼寫，因此後面會介紹一些對應的行為。</p>
+</section>
+<section id="id4">
+<h3>實例化<a class="headerlink" href="#id4" title="本標題的永久連結">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;edward&#39;</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># edward</span>
+</pre></div>
+</div>
+<p>在前面提到 class 可以經過實例化 (或是稱 new) 得到一個 instance，在此例中，就是由 Person 這個 class 經過實例化得到 a 這個 instance，
+由此可知在 Python 裡面，對一個 class 做 call 這個動作，就會得到對應的 instance，而 call 的這個行為，其實就是在後面加上 <cite>()</cite>，就像上例的 <cite>Person()</cite></p>
+<section id="id5">
+<h4>有參數的實例化<a class="headerlink" href="#id5" title="本標題的永久連結">¶</a></h4>
+<p>在看過上一個例子後，一定會覺得每個 Person 都叫 edward 會顯得彈性有點低，因此應該要把一些客製化 (不屬於 class 要的 spec) 的部分獨立出來，並提供客製化的方式，
+最常見的方式就是在建構的時候給予客製化的參數，如下例，就是把 Person 的名字使用參數的方式交給製作 instance 的時候客製，而這克制的行為，就會是每個 instance 不一樣的部分即是他們的 class 一樣。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>仔細分析可以知道一個 Person 的物件有 <cite>name</cite> 這個 attribute 屬於 class 的行為，但內容叫什麼則是屬於 instance 客製化後的行為，這中間有些微的差異。</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;edward&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># edward</span>
+</pre></div>
+</div>
+</section>
+<section id="self">
+<h4>實例化的流程 - self 是什麼<a class="headerlink" href="#self" title="本標題的永久連結">¶</a></h4>
+<p>實例化的過程有很多的細節，主要有兩個 <cite>__new__</cite>、<cite>__init__</cite>，<cite>__new__</cite> 比較複雜這邊就不詳細說明，只需要知道一般來說經過 <cite>__new__</cite> 的過程，會得到一個新的 instance，
+而此 instance 會被當作 self 這個 call <cite>__init__</cite> 這個 function，因此可以當作一般狀況時，實例化的過程都會執行到 <cite>__init__</cite>，你可以在此 function 初步的對此 instance 設定，
+就像上面的例子，就是在 <cite>__init__</cite> 裡面定義了此 instance 有 name 這個 <cite>attribute</cite>，且值為 <cite>Person(name)</cite> 裡面的 name，也就是 <cite>『edward』</cite>。</p>
+<p>再由前面的例子以及前面的說明，可以知道 self 就是新的一個 instacne，用來放所有此 instance 相關的東西，就像是 <cite>self.name</cite>。
+且 class 實例化後的 instance 會直接作為 return value 的方式提供給執行實例化 (也就是 call Class 名) 的人，在上例中也就是 <cite>a</cite> 的這個變數。
+由這兩點，我們可以推論 self 也就是 <cite>a</cite>，也就因此為什麼後面執行 <cite>a.name</cite> 的時候會拿到 <cite>『edward』</cite> 了，就是因為在 <cite>__init__</cite> 的過程中有把 <cite>self.name</cite> 設為了 <cite>『edward』</cite> 的原因。</p>
+</section>
+</section>
+<section id="instance-class">
+<h3>instance 如何使用 class 的東西<a class="headerlink" href="#instance-class" title="本標題的永久連結">¶</a></h3>
+<p>以前面的例子，我們知道 instance 的建構流程是由 class 的 <cite>__init__</cite> 決定的，所以一些 instance 上的 attribute 也會間接的建立，但事實上 instance 會使用到 class 的部分可不止如此。
+先由最簡單的一般變數來說，以下例來說，除了前面介紹設定於 instance 上的 <cite>name</cite> attribute 外，還在 class 裡設定了 <cite>leg_num</cite> 這個 attribute，因此當對 <cite>leg_num</cite> 這個 attribute 取得時，
+會先找找 instance 裡面有沒有，沒有的話去找找他的 class 有沒有，因為在 class 裡面有找到 <cite>leg_num = 2</cite>，因此 <cite>a.leg_num</cite> 才會得到 2。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="n">leg_num</span> <span class="o">=</span> <span class="mi">2</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;edward&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>     <span class="c1"># edward</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">leg_num</span><span class="p">)</span>  <span class="c1"># 2</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>讀取的時候會由 instance 一路往上找，但是寫的時候，就會直接寫到此 instance 上，所以如果此 Person 如果斷腿的時候，可以直接藉由 <cite>a.leg_num = 1</cite> 的方式修改，
+也不會讓其他 Person 也變成斷腿的，因為只改到了此 Person 的 instance 上，並沒有改到 class 上，如果真的想要每個 Person 都斷腿，就需要 <cite>Person.leg_num</cite> 這樣改。</p>
+<p>如果想瞭解更多細節，可參考 <a class="reference internal" href="attr_cmp.html#attr_cmp"><span class="std std-ref">此</span></a> 。</p>
+</div>
+<section id="def-function-class">
+<h4>def 定義出來的 function 用於 class 的特別之處<a class="headerlink" href="#def-function-class" title="本標題的永久連結">¶</a></h4>
+<p>前面我們看到一般狀況上，instance 如何使用到 class 的性質了，但一般會寫 class 的時候，最常要共用的是 function 的行為，如一個 Person 可能會不同的名字，但是多數的行為都會是同樣的，
+如都會需要有 <cite>eat(『Apple』)</cite> 之類的行為，現在知道對於 class 而言 function 佔了多重要的角色了，但在 python 裡面 function 的行為卻是最不值覺得，中間有太多 <a class="reference internal" href="desc_class.html#desc_class"><span class="std std-ref">原理</span></a> 的細節，
+這裡簡單用栗子的方式給各位這中間的感覺。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+  <span class="k">def</span> <span class="nf">eat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">food</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> eats </span><span class="si">{</span><span class="n">food</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;edward&#39;</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">eat</span><span class="p">(</span><span class="s1">&#39;apple&#39;</span><span class="p">)</span>          <span class="c1"># edward eats apple.</span>
+<span class="n">Person</span><span class="o">.</span><span class="n">eat</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;apple&#39;</span><span class="p">)</span>  <span class="c1"># edward eats apple.</span>
+</pre></div>
+</div>
+<p>由上例可知，由 instance 執行的 class function 會自動把第一個參數帶入 instance 給 self，所以 <cite>a.eat(『apple』)</cite> 時，實際上 eat function 拿到的參數是 a 和 『apple』，
+也就相當於是執行 <cite>Person.eat(a, 『apple』)</cite>。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>這之間會有這樣的原因，是因為用 def 宣告出來的 function 其 <cite>__get__</cite> 的能力，因此在 instance 上取得 class 的東西時，會經特別的處理，會把原本的 function 綁定 instance 為第一個參數，
+而此這種東西的型態稱為 bound method，也就是為什麼常見習慣都會稱 class 裡面的 function 為 method，method 就是已經有綁定 instance 的 function 的意思。</p>
+<p>也因此如果想要 instance 上取得的 function，第一個參數改為 cls 自己，則會用 classmethod 修飾，如果不會多傳第一個參數，則會用 staticmethod 修飾，實際上就是要改掉預設的行為。</p>
+</div>
+</section>
+</section>
+</section>
+<section id="id6">
+<h2>常見的使用方式<a class="headerlink" href="#id6" title="本標題的永久連結">¶</a></h2>
+<section id="property">
+<h3>property<a class="headerlink" href="#property" title="本標題的永久連結">¶</a></h3>
+<p>在 class 中，<cite>&#64;property</cite> 修飾後的 function，會變成取得此 attribute 時，實際是由執行此 function 來得到其 attribute 的，
+以此例來說，<cite>name</cite> 這個 function 經 <cite>&#64;property</cite> 修飾後，<cite>a.name</cite> 或是 <cite>self.name</cite> 的方式要取得 name 這個 attribute 時，實際上都是執行 name 這個 function 來取得，
+因此才會拿到 <cite>f』{self.first_name} {self.last_name}』</cite> 的結果，也就是 <cite>Edward Yan</cite>。</p>
+<p>一般遇到值可以由別的 instance 取得，或是想做到某個 attribute 不能被修改時，經常會使用此方式。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="n">first_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="n">last_name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">first_name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_name</span><span class="si">}</span><span class="s1">&#39;</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;Edward&#39;</span><span class="p">,</span> <span class="s1">&#39;Yan&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># Edward Yan</span>
+</pre></div>
+</div>
+</section>
+<section id="classmethod">
+<h3>classmethod<a class="headerlink" href="#classmethod" title="本標題的永久連結">¶</a></h3>
+<p>一般 class 中的 function，第一個參數會是 self，也就是拿到 instance 本人，但是如果想要拿到的是 class 而非 instance，就可以用 <cite>&#64;classmethod</cite> 來修飾此 function，
+如此例的 <cite>get_apple</cite>，這樣第一個參數就會改成拿到 <cite>cls</cite>，也就是 Fruit 這個 class，因此就可以使用 <cite>cls(『Apple』)</cite> 的方式初始。</p>
+<p>常見的使用方式是提供一些常見實例化此 class 的 function，如此例就是認為實例化 Apple 常會用到，所以特別包出來。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Fruit</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">get_apple</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="s1">&#39;Apple&#39;</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Fruit</span><span class="o">.</span><span class="n">get_apple</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># Apple</span>
+</pre></div>
+</div>
+</section>
+<section id="staticmethod">
+<h3>staticmethod<a class="headerlink" href="#staticmethod" title="本標題的永久連結">¶</a></h3>
+<p>如果只是想要 class 當作 section 看待，那 section 中想要放 function 就會被都塞第一個參數，而導致並非只是整理相關 function 了，這時候可以使用 <cite>&#64;staticmethod</cite> 的方式修飾 function，
+這樣此 function 即使在 class 中，也不會被偷帶第一個參數。如此例來說，只是想要整理各種 Sport 到一個 class 中，但並想要表明不需要先實例化 Sport 才能使用，就會使用 <cite>&#64;staticmethod</cite> 修飾。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Sport</span><span class="p">:</span>
+  <span class="nd">@staticmethod</span>
+  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">person</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> runs.&#39;</span><span class="p">)</span>
+
+  <span class="nd">@staticmethod</span>
+  <span class="k">def</span> <span class="nf">swim</span><span class="p">(</span><span class="n">person</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> swims.&#39;</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="s1">&#39;edward&#39;</span><span class="p">)</span>
+<span class="n">Sport</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>    <span class="c1"># edward runs.</span>
+<span class="n">Sport</span><span class="o">.</span><span class="n">swim</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>   <span class="c1"># edward swims.</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+<div class="section">
+    
+
+<div class="section">
+  <span style="float: left">
+     
+    <a href="attr_cmp.html">
+      <i class="fa fa-arrow-circle-left"></i> Python 各種 attribute 取得方式的比較
+    </a>
+    
+  </span>
+  <span>&nbsp;</span>
+  <span style="float: right">
+    
+  </span>
+</div>
+  
+</div>
+
+          </div>
+          <div class="page-nav">
+            <div class="inner"><ul class="page-nav">
+</ul><div class="footer" role="contentinfo">
+      &#169; 版權所有 2022, yoyo。
+    <br>
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.2 with <a href="https://github.com/schettino72/sphinx_press_theme">Press Theme</a> 0.8.0.
+</div>
+            </div>
+          </div>
+      </page>
+    </div></div>
+    
+    
+  </body>
+</html>

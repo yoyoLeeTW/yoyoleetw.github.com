@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh_TW">
   <id>https://yoyoleetw.github.io</id>
   <title>yoyo's Blog - Posts from Taiwan</title>
-  <updated>2022-04-24T09:17:48.163353+00:00</updated>
+  <updated>2022-10-10T08:09:00.008323+00:00</updated>
   <link href="https://yoyoleetw.github.io"/>
   <link href="https://yoyoleetw.github.io/blog/location/taiwan/atom.xml" rel="self"/>
   <generator uri="https://ablog.readthedocs.org/" version="0.10.23">ABlog</generator>
@@ -113,5 +113,22 @@
     <category term="Python" label="Python"/>
     <category term="attribute" label="attribute"/>
     <published>2022-04-24T00:00:00+00:00</published>
+  </entry>
+  <entry>
+    <id>https://yoyoleetw.github.io/zh_TW/post/python/class.html</id>
+    <title>用例子學 class</title>
+    <updated>2022-10-09T00:00:00+00:00</updated>
+    <author>
+      <name>Yo-Yo Li</name>
+    </author>
+    <content type="html">&lt;div class="ablog-post-excerpt docutils container"&gt;
+&lt;p&gt;class&lt;/p&gt;
+&lt;/div&gt;
+</content>
+    <link href="https://yoyoleetw.github.io/zh_TW/post/python/class.html" rel="alternate"/>
+    <summary>class</summary>
+    <category term="Python" label="Python"/>
+    <category term="class" label="class"/>
+    <published>2022-10-09T00:00:00+00:00</published>
   </entry>
 </feed>
