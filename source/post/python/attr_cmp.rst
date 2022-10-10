@@ -7,6 +7,8 @@
 
   class descriptor v.s. value saved in object
 
+.. _attr_cmp:
+
 ============================================
 Python 各種 attribute 取得方式的比較
 ============================================
